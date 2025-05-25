@@ -1,0 +1,38 @@
+FROM ubuntu:24.04
+
+# Set non-interactive frontend to avoid prompts during installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update package list and install necessary packages
+RUN apt-get update && \
+    apt-get install -y \
+        nginx \
+        mysql-client \
+        net-tools \
+        curl \
+        telnet \
+        dnsutils \
+        vim && \  
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set working directory to Nginx web root
+WORKDIR /var/www/html
+
+# Copy application code
+COPY --chown=root src/ /var/www/html/
+
+# Copy default configuration file 
+COPY config/default /etc/nginx/sites-enabled/default
+
+# Copy nginx.conf 
+COPY config/nginx.conf /etc/nginx/nginx.conf
+
+# Grant the permission of /var/log/nginx/access.log as root
+RUN chown root:adm /var/log/nginx/access.log && chown root:adm /var/log/nginx/error.log
+
+# Expose port 80 for web traffic
+EXPOSE 80
+
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]
